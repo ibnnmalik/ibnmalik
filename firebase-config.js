@@ -4,9 +4,8 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 
-// إعدادات مشروعك الحقيقية "ibn-malik-store"
 const firebaseConfig = {
-  apiKey: "AIzaSyDMuwa5nU4x6lNGFjsyuTTqFU9xbrKqsD4",
+  apiKey: "AIzaSyDMuwa5nU4x61NGFjsyuTTqFU9xbrKqsD4",
   authDomain: "ibn-malik-store.firebaseapp.com",
   projectId: "ibn-malik-store",
   storageBucket: "ibn-malik-store.firebasestorage.app",
@@ -15,11 +14,10 @@ const firebaseConfig = {
   measurementId: "G-9MM3VPWKRY"
 };
 
-// تشغيل الخدمات
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// تصديرهم عشان نستخدمهم في الصفحات التانية
 export { db, auth, storage };
