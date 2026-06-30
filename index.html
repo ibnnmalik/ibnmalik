@@ -1037,7 +1037,7 @@ import('./firebase-config.js').then(async (config) => {
     try {
         const querySnapshot = await getDocs(collection(db, "products"));
         querySnapshot.forEach((doc) => {
-            PRODUCTS.push(doc.data());
+            PRODUCTS.push({ __docId: doc.id, ...doc.data() });
         });
         // ترتيب المنتجات تصاعدياً حسب رقم التعريف
         PRODUCTS.sort((a, b) => a.id - b.id);
@@ -1357,7 +1357,7 @@ function changeAdminPass(){
   showToast('تم تغيير كلمة المرور ✅');
 }
 
-/* ══════════════════════════════════════
+/* ══════════════   ═══════════════════════
    PRODUCT EDITOR
 ══════════════════════════════════════ */
 let editingId = null;
@@ -1396,7 +1396,17 @@ function addIconRow(ic=null){
   wrap.appendChild(div);
 }
 
-function saveProduct(){
+async function getProductFirestoreTools(){
+  const { db } = await import('./firebase-config.js');
+  const { collection, addDoc, doc, updateDoc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+  return { db, collection, addDoc, doc, updateDoc, deleteDoc };
+}
+function cleanProductForFirestore(product){
+  const { __docId, ...data } = product;
+  return data;
+}
+
+async function saveProduct(){
   const nameEn=document.getElementById('peNameEn').value.trim();
   const nameAr=document.getElementById('peNameAr').value.trim();
   const price=parseInt(document.getElementById('pePrice').value);
@@ -1411,43 +1421,105 @@ function saveProduct(){
     const inp=r.querySelector('input');
     return {i:sels[0].value, l:inp.value, c:sels[1].value};
   }).filter(ic=>ic.l);
-  if(editingId){
-    const idx=PRODUCTS.findIndex(x=>x.id===editingId);
-    PRODUCTS[idx]={...PRODUCTS[idx],nameEn,nameAr,price,emoji,img,desc,bestseller,icons};
-  } else {
-    const newId=Date.now();
-    PRODUCTS.push({id:newId,nameEn,nameAr,price,emoji,img,desc,bestseller,icons,discount:0});
+
+  try{
+    const { db, collection, addDoc, doc, updateDoc } = await getProductFirestoreTools();
+    if(editingId){
+      const idx=PRODUCTS.findIndex(x=>x.id===editingId);
+      if(idx<0){showToast('⚠️ المنتج غير موجود');return;}
+      const updated={...PRODUCTS[idx],nameEn,nameAr,price,emoji,img,desc,bestseller,icons};
+      if(!updated.__docId){showToast('⚠️ لا يمكن تعديل منتج بلا رقم Firebase');return;}
+      await updateDoc(doc(db,'products',updated.__docId), cleanProductForFirestore(updated));
+      PRODUCTS[idx]=updated;
+    } else {
+      const newProduct={id:Date.now(),nameEn,nameAr,price,emoji,img,desc,bestseller,icons,discount:0};
+      const ref=await addDoc(collection(db,'products'), newProduct);
+      PRODUCTS.push({__docId:ref.id,...newProduct});
+    }
+    saveProducts();
+    renderAll();
+    document.getElementById('prodEditor').classList.remove('open');
+    renderAdminProducts(document.getElementById('apContent'));
+    showToast(editingId?'تم تعديل المنتج ونشره ✅':'تمت إضافة المنتج ونشره ✅');
+  }catch(err){
+    console.error('Firebase save product failed:', err);
+    showToast('⚠️ لم يتم النشر. راجع صلاحيات Firebase');
   }
-  saveProducts();
-  document.getElementById('prodEditor').classList.remove('open');
-  renderAdminProducts(document.getElementById('apContent'));
-  showToast(editingId?'تم تعديل المنتج ✅':'تمت إضافة المنتج ✅');
 }
 
-function deleteProduct(id){
+async function deleteProduct(id){
   if(!confirm('هل تريد حذف هذا المنتج؟'))return;
-  PRODUCTS=PRODUCTS.filter(p=>p.id!==id);
-  saveProducts();
-  renderAdminProducts(document.getElementById('apContent'));
-  showToast('تم حذف المنتج');
-}
-function toggleBest(id){
   const p=PRODUCTS.find(x=>x.id===id);
-  if(p) p.bestseller=!p.bestseller;
-  saveProducts();
-  renderAdminProducts(document.getElementById('apContent'));
-  showToast(p.bestseller?'تمت إضافته للرئيسية ⭐':'تمت إزالته من الرئيسية');
+  if(!p){showToast('⚠️ المنتج غير موجود');return;}
+  if(!p.__docId){showToast('⚠️ لا يمكن حذف منتج بلا رقم Firebase');return;}
+  try{
+    const { db, doc, deleteDoc } = await getProductFirestoreTools();
+    await deleteDoc(doc(db,'products',p.__docId));
+    PRODUCTS=PRODUCTS.filter(x=>x.id!==id);
+    saveProducts();
+    renderAll();
+    renderAdminProducts(document.getElementById('apContent'));
+    showToast('تم حذف المنتج ونشر التغيير ✅');
+  }catch(err){
+    console.error('Firebase delete product failed:', err);
+    showToast('⚠️ لم يتم الحذف. راجع صلاحيات Firebase');
+  }
 }
-function applyDiscount(){
+async function toggleBest(id){
+  const p=PRODUCTS.find(x=>x.id===id);
+  if(!p || !p.__docId){showToast('⚠️ لا يمكن تحديث هذا المنتج');return;}
+  p.bestseller=!p.bestseller;
+  try{
+    const { db, doc, updateDoc } = await getProductFirestoreTools();
+    await updateDoc(doc(db,'products',p.__docId), {bestseller:p.bestseller});
+    saveProducts();
+    renderAll();
+    renderAdminProducts(document.getElementById('apContent'));
+    showToast(p.bestseller?'تمت إضافته للرئيسية ونشره ⭐':'تمت إزالته من الرئيسية ونشره');
+  }catch(err){
+    p.bestseller=!p.bestseller;
+    console.error('Firebase bestseller update failed:', err);
+    showToast('⚠️ لم يتم تحديث المنتج. راجع صلاحيات Firebase');
+  }
+}
+async function applyDiscount(){
   const id=parseInt(document.getElementById('discProdSel').value);
   const pct=parseInt(document.getElementById('discPct').value);
  if(!pct||pct<5||pct>80){showToast('⚠️ أدخل نسبة خصم بين 5 و 80%');return;}
   const p=PRODUCTS.find(x=>x.id===id);
-  if(p){p.discount=pct;saveProducts();renderAdminDiscounts(document.getElementById('apContent'));showToast(`تم تطبيق خصم ${pct}% ✅`);}
+  if(!p || !p.__docId){showToast('⚠️ لا يمكن تحديث هذا المنتج');return;}
+  const oldDiscount=p.discount||0;
+  p.discount=pct;
+  try{
+    const { db, doc, updateDoc } = await getProductFirestoreTools();
+    await updateDoc(doc(db,'products',p.__docId), {discount:pct});
+    saveProducts();
+    renderAll();
+    renderAdminDiscounts(document.getElementById('apContent'));
+    showToast(`تم تطبيق خصم ${pct}% ونشره ✅`);
+  }catch(err){
+    p.discount=oldDiscount;
+    console.error('Firebase discount update failed:', err);
+    showToast('⚠️ لم يتم تطبيق الخصم. راجع صلاحيات Firebase');
+  }
 }
-function removeDiscount(id){
+async function removeDiscount(id){
   const p=PRODUCTS.find(x=>x.id===id);
-  if(p){p.discount=0;saveProducts();renderAdminDiscounts(document.getElementById('apContent'));showToast('تم إزالة الخصم');}
+  if(!p || !p.__docId){showToast('⚠️ لا يمكن تحديث هذا المنتج');return;}
+  const oldDiscount=p.discount||0;
+  p.discount=0;
+  try{
+    const { db, doc, updateDoc } = await getProductFirestoreTools();
+    await updateDoc(doc(db,'products',p.__docId), {discount:0});
+    saveProducts();
+    renderAll();
+    renderAdminDiscounts(document.getElementById('apContent'));
+    showToast('تم إزالة الخصم ونشر التغيير ✅');
+  }catch(err){
+    p.discount=oldDiscount;
+    console.error('Firebase discount remove failed:', err);
+    showToast('⚠️ لم يتم إزالة الخصم. راجع صلاحيات Firebase');
+  }
 }
 
 /* ══════════════════════════════════════
@@ -1642,7 +1714,7 @@ document.getElementById('doModal').addEventListener('click',function(e){if(e.tar
 
 /* ══════════════════════════════════════
    CART
-══════════════════════════════════════ */
+═══════════════════════════════════  ══ */
 let CART={};
 function addToCartById(id){
   const p=PRODUCTS.find(x=>x.id===id);
