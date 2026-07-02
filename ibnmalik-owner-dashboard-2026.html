@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  body{background:var(--parchment)}
+  .admin-wrap{max-width:1100px;margin:0 auto;padding:24px 20px}
+  .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .tab-btn{background:var(--white);border:1px solid var(--line);border-radius:999px;padding:9px 18px;font-weight:700;font-size:.88rem}
+  .tab-btn.active{background:var(--olive-950);color:var(--white)}
+  .panel{display:none;background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .panel.active{display:block}
+  table{width:100%;border-collapse:collapse;font-size:.88rem}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--parchment-dim);text-align:start}
+  th{font-family:var(--font-data);color:var(--olive-800);font-size:.78rem;text-transform:uppercase}
+  .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px}
+  .stat-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .stat-card .num{font-family:var(--font-data);font-size:1.6rem;font-weight:700;color:var(--honey-deep)}
+  .row-actions button{background:none;border:none;font-size:.85rem;cursor:pointer;padding:2px 6px}
+  .row-actions .edit{color:var(--olive-800)} .row-actions .del{color:var(--clay)}
+  select.status-select{border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:.82rem}
+  .login-wrap{max-width:380px;margin:80px auto;background:var(--white);padding:28px;border-radius:var(--radius);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<div id="loginView" class="login-wrap">
+  <h2 class="h-display">Ibn Malik — Admin</h2>
+  <form id="loginForm">
+    <div class="field"><label>Email</label><input required type="email" name="email"></div>
+    <div class="field"><label>Password</label><input required type="password" name="password"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" type="submit">Log in</button>
+  </form>
+  <p id="loginError" style="color:var(--clay);font-size:.85rem"></p>
+</div>
+
+<div id="dashView" class="admin-wrap" hidden>
+  <div class="admin-header">
+    <h2 class="h-display">Ibn Malik — Dashboard</h2>
+    <button class="btn btn-ghost" id="logoutBtn">Log out</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="products">Products</button>
+    <button class="tab-btn" data-tab="categories">Categories</button>
+    <button class="tab-btn" data-tab="discounts">Discounts</button>
+    <button class="tab-btn" data-tab="orders">Orders</button>
+    <button class="tab-btn" data-tab="reviews">Reviews</button>
+  </div>
+
+  <div class="panel active" id="panel-overview">
+    <div class="stat-cards">
+      <div class="stat-card"><div class="num" id="statOrders">0</div>Total orders</div>
+      <div class="stat-card"><div class="num" id="statRevenue">0</div>Revenue (EGP)</div>
+      <div class="stat-card"><div class="num" id="statProducts">0</div>Active products</div>
+      <div class="stat-card"><div class="num" id="statPending">0</div>Pending orders</div>
+    </div>
+    <h3>Recent orders</h3>
+    <table><thead><tr><th>#</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody id="recentOrdersBody"></tbody></table>
+  </div>
+
+  <div class="panel" id="panel-products">
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+      <h3 style="margin:0">Products</h3>
+      <button class="btn btn-primary" id="addProductBtn">+ Add product</button>
+    </div>
+    <table><thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
+      <tbody id="productsBody"></tbody></table>
+  </div>
+
+  <div class="panel" id="panel-categories">
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+      <h3 style="margin:0">Categories</h3>
+      <button class="btn btn-primary" id="addCategoryBtn">+ Add category</button>
+    </div>
+    <table><thead><tr><th>Name (AR)</th><th>Name (EN)</th><th>Slug</th><th></th></tr></thead>
+      <tbody id="categoriesBody"></tbody></table>
+  </div>
+
+  <div class="panel" id="panel-discounts">
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+      <h3 style="margin:0">Discounts</h3>
+      <button class="btn btn-primary" id="addDiscountBtn">+ Add discount</button>
+    </div>
+    <table><thead><tr><th>Label</th><th>Type</th><th>Value</th><th>Applies to</th><th>Active</th><th></th></tr></thead>
+      <tbody id="discountsBody"></tbody></table>
+  </div>
+
+  <div class="panel" id="panel-orders">
+    <h3>Orders</h3>
+    <table><thead><tr><th>#</th><th>Customer</th><th>Phone</th><th>Governorate</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody id="ordersBody"></tbody></table>
+  </div>
+
+  <div class="panel" id="panel-reviews">
+    <h3>Reviews</h3>
+    <table><thead><tr><th>Product</th><th>Customer</th><th>Rating</th><th>Comment</th><th>Status</th><th></th></tr></thead>
+      <tbody id="reviewsBody"></tbody></table>
+  </div>
+</div>
+
+<!-- Product editor modal -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal">
+    <h3 id="productModalTitle">Add product</h3>
+    <form id="productForm">
+      <input type="hidden" name="id">
+      <div class="field"><label>Name (AR)</label><input required name="name_ar"></div>
+      <div class="field"><label>Name (EN)</label><input required name="name_en"></div>
+      <div class="field"><label>SKU</label><input name="sku"></div>
+      <div class="field"><label>Category</label><select name="category_id" id="productCategorySelect"></select></div>
+      <div class="field"><label>Price</label><input required type="number" step="0.01" name="price"></div>
+      <div class="field"><label>Sale price (optional)</label><input type="number" step="0.01" name="sale_price"></div>
+      <div class="field"><label>Stock</label><input required type="number" name="stock" value="0"></div>
+      <div class="field"><label>Image URL</label><input name="image_url" placeholder="https://…"></div>
+      <div class="field"><label>Short description (AR)</label><textarea name="short_description_ar"></textarea></div>
+      <div class="field"><label>Short description (EN)</label><textarea name="short_description_en"></textarea></div>
+      <div class="field"><label><input type="checkbox" name="is_featured"> Featured</label></div>
+      <div class="field"><label><input type="checkbox" name="is_best_seller"> Best seller</label></div>
+      <div class="field"><label>Status</label>
+        <select name="status"><option value="active">active</option><option value="draft">draft</option><option value="archived">archived</option></select>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" type="submit">Save</button>
+    </form>
+  </div>
+</div>
+
+<!-- Category editor modal -->
+<div class="modal-overlay" id="categoryModal">
+  <div class="modal">
+    <h3 id="categoryModalTitle">Add category</h3>
+    <form id="categoryForm">
+      <input type="hidden" name="id">
+      <div class="field"><label>Name (AR)</label><input required name="name_ar"></div>
+      <div class="field"><label>Name (EN)</label><input required name="name_en"></div>
+      <div class="field"><label>Slug</label><input required name="slug" placeholder="e.g. honey"></div>
+      <div class="field"><label>Sort order</label><input type="number" name="sort_order" value="0"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" type="submit">Save</button>
+    </form>
+  </div>
+</div>
+
+<!-- Discount editor modal -->
+<div class="modal-overlay" id="discountModal">
+  <div class="modal">
+    <h3 id="discountModalTitle">Add discount</h3>
+    <form id="discountForm">
+      <input type="hidden" name="id">
+      <div class="field"><label>Label (AR)</label><input name="label_ar"></div>
+      <div class="field"><label>Label (EN)</label><input name="label_en"></div>
+      <div class="field"><label>Type</label><select name="type"><option value="percentage">percentage</option><option value="fixed">fixed</option></select></div>
+      <div class="field"><label>Value</label><input required type="number" step="0.01" name="value"></div>
+      <div class="field"><label>Applies to</label>
+        <select name="applies_to" id="appliesToSelect">
+          <option value="all">All products</option>
+          <option value="category">Specific category</option>
+          <option value="product">Specific product</option>
+        </select>
+      </div>
+      <div class="field" id="targetField" hidden><label>Target</label><select name="target_id" id="targetSelect"></select></div>
+      <div class="field"><label><input type="checkbox" name="active" checked> Active</label></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" type="submit">Save</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="assets/admin.js"></script>
+</body>
+</html>

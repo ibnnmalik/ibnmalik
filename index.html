@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ابن مالك | Ibn Malik — منتجات غذائية فاخرة</title>
+<meta name="description" content="عسل نحل طبيعي، طحينة، زبدة فول سوداني وشوفان — منتجات ابن مالك الفاخرة، توصيل لكل المحافظات، الدفع عند الاستلام.">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo"><span class="mark"></span><span data-i18n="brand">ابن مالك</span></a>
+    <div class="search-bar">
+      <span aria-hidden="true">🔍</span>
+      <input id="searchInput" type="search" data-i18n-ph="search_ph" placeholder="ابحث عن عسل، طحينة، شوفان…">
+    </div>
+    <div class="header-actions">
+      <button class="lang-toggle" id="langToggle">EN</button>
+      <button class="icon-btn" id="wishlistBtn" aria-label="Wishlist">♡<span class="badge-count" id="wishCount" hidden>0</span></button>
+      <button class="icon-btn" id="cartBtn" aria-label="Cart">🛒<span class="badge-count" id="cartCount" hidden>0</span></button>
+      <button class="login-btn" id="authBtn" data-i18n="login">تسجيل الدخول</button>
+    </div>
+  </div>
+</header>
+
+<nav class="category-shelf" aria-label="Categories">
+  <div class="shelf-row" id="categoryShelf">
+    <!-- filled by app.js -->
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow" data-i18n="eyebrow">طبيعي 100% · من المزرعة للبيت</p>
+    <h1 class="h-display" data-i18n="hero_title">جودة تستحق مطبخك</h1>
+    <p data-i18n="hero_sub">عسل نحل طبيعي، طحينة نقية، زبدة فول سوداني وشوفان — تصل لباب بيتك في كل المحافظات، والدفع عند الاستلام.</p>
+    <div class="hero-ctas">
+      <a href="#shop" class="btn btn-primary" data-i18n="cta_shop">تسوق الآن</a>
+      <a href="#best-sellers" class="btn btn-ghost" data-i18n="cta_best">الأكثر مبيعًا</a>
+    </div>
+  </div>
+  <div class="ticket-stack" id="heroTickets" aria-hidden="true"></div>
+</section>
+
+<section class="section" id="featured">
+  <div class="section-head">
+    <h2 class="h-display" data-i18n="featured_title">منتجات مختارة</h2>
+  </div>
+  <div class="product-grid" id="featuredGrid"></div>
+</section>
+
+<section class="section" id="best-sellers">
+  <div class="section-head">
+    <h2 class="h-display" data-i18n="best_title">الأكثر مبيعًا</h2>
+  </div>
+  <div class="product-grid" id="bestGrid"></div>
+</section>
+
+<section class="section" id="shop">
+  <div class="section-head">
+    <h2 class="h-display" data-i18n="shop_title">كل المنتجات</h2>
+  </div>
+  <div class="filters-and-grid">
+    <aside class="filters" aria-label="Filters">
+      <h3 data-i18n="filter_cat">الفئة</h3>
+      <div id="filterCategories"></div>
+      <h3 style="margin-top:16px" data-i18n="filter_offers">العروض</h3>
+      <label><input type="checkbox" id="filterDiscountOnly"> <span data-i18n="filter_discount_only">عرض المنتجات المخفضة فقط</span></label>
+    </aside>
+    <div>
+      <div class="product-grid" id="allProductsGrid"></div>
+      <p class="empty-state" id="emptyState" hidden data-i18n="no_products">لا توجد منتجات مطابقة</p>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div>
+      <h4 class="h-display" data-i18n="brand">ابن مالك</h4>
+      <p data-i18n="footer_tag">منتجات غذائية طبيعية فاخرة</p>
+    </div>
+    <div>
+      <h4 data-i18n="footer_contact">تواصل معنا</h4>
+      <p>WhatsApp: +20 112 333 0540</p>
+      <p><a href="https://www.facebook.com/share/1BYZey2H1v/" target="_blank" rel="noopener">Facebook</a></p>
+    </div>
+  </div>
+</footer>
+
+<a class="wa-float" id="waFloat" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">💬</a>
+
+<!-- Cart Drawer -->
+<div class="drawer-overlay" id="cartOverlay"></div>
+<aside class="drawer" id="cartDrawer" aria-label="Shopping cart">
+  <div class="drawer-head">
+    <h3 data-i18n="cart_title">سلة المشتريات</h3>
+    <button class="icon-btn" id="closeCart" style="color:var(--ink)">✕</button>
+  </div>
+  <div class="drawer-body" id="cartBody"></div>
+  <div class="drawer-foot">
+    <div class="cart-total-row"><span data-i18n="total">الإجمالي</span><span id="cartTotal">0 ج.م</span></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" id="checkoutBtn" data-i18n="checkout">إتمام الطلب</button>
+  </div>
+</aside>
+
+<!-- Wishlist Drawer -->
+<div class="drawer-overlay" id="wishOverlay"></div>
+<aside class="drawer" id="wishDrawer" aria-label="Wishlist">
+  <div class="drawer-head">
+    <h3 data-i18n="wishlist_title">المفضلة</h3>
+    <button class="icon-btn" id="closeWish" style="color:var(--ink)">✕</button>
+  </div>
+  <div class="drawer-body" id="wishBody"></div>
+</aside>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutOverlay">
+  <div class="modal">
+    <h3 data-i18n="checkout_title">بيانات التوصيل</h3>
+    <form id="checkoutForm">
+      <div class="field">
+        <label data-i18n="full_name">الاسم بالكامل</label>
+        <input required name="full_name" type="text">
+      </div>
+      <div class="field">
+        <label data-i18n="phone">رقم الهاتف</label>
+        <input required name="phone" type="tel" pattern="^01[0-2,5]{1}[0-9]{8}$" placeholder="01xxxxxxxxx">
+      </div>
+      <div class="field">
+        <label data-i18n="governorate">المحافظة</label>
+        <select required name="governorate" id="governorateSelect"></select>
+      </div>
+      <div class="field">
+        <label data-i18n="address">العنوان بالتفصيل</label>
+        <textarea required name="address"></textarea>
+      </div>
+      <div class="field">
+        <label data-i18n="notes">ملاحظات (اختياري)</label>
+        <textarea name="notes"></textarea>
+      </div>
+      <div class="field">
+        <label data-i18n="payment">طريقة الدفع</label>
+        <input type="text" value="الدفع عند الاستلام" disabled data-i18n-val="cod">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center" data-i18n="confirm_order">تأكيد الطلب</button>
+    </form>
+  </div>
+</div>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="authOverlay">
+  <div class="modal">
+    <h3 data-i18n="login_title">تسجيل الدخول</h3>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:10px" id="googleLoginBtn">
+      <span aria-hidden="true">G</span> <span data-i18n="google_login">الدخول بحساب Google</span>
+    </button>
+    <p style="text-align:center;color:#a79a78;font-size:.8rem" data-i18n="login_note">تسجيل الدخول اختياري — يمكنك تسجيل الطلب كزائر أيضًا.</p>
+  </div>
+</div>
+
+<!-- Order confirmation modal -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal" style="text-align:center">
+    <h3 data-i18n="order_received">تم استلام طلبك 🎉</h3>
+    <p data-i18n="order_number_label">رقم الطلب:</p>
+    <p style="font-family:var(--font-data);font-weight:700;font-size:1.2rem" id="orderNumberDisplay"></p>
+    <p data-i18n="order_followup">هنتواصل معك لتأكيد الطلب. تقدر كمان تبعت الطلب على واتساب.</p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <a href="#" id="waShareOrder" target="_blank" rel="noopener" class="btn btn-primary">WhatsApp</a>
+      <button class="btn btn-ghost" id="closeConfirm" data-i18n="close">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="assets/app.js"></script>
+</body>
+</html>
